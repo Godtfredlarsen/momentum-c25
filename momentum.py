@@ -28,13 +28,13 @@ start_date = end_date - timedelta(weeks=12)
 
 data = yf.download(tickers, start=start_date, end=end_date)
 
-# ✅ FIX FOR "Adj Close" FEJL
+# ✅ FIX (brug Close i stedet for Adj Close)
 if isinstance(data.columns, pd.MultiIndex):
-    data = data["Adj Close"]
-elif "Adj Close" in data.columns:
-    data = data["Adj Close"]
+    data = data["Close"]
+elif "Close" in data.columns:
+    data = data["Close"]
 else:
-    raise Exception("Adj Close data ikke fundet")
+    raise Exception("Close data ikke fundet")
 
 # =====================
 # PRISER
@@ -52,7 +52,7 @@ top5 = returns.sort_values(ascending=False).head(5)
 bottom5 = returns.sort_values(ascending=True).head(5)
 
 # =====================
-# FORMAT (KOLONNER)
+# FORMAT
 # =====================
 def format_table(series):
     lines = []
