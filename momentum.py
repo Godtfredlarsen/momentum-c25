@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 EMAIL = "mgl@godtfredlarsen.com"
 TO_EMAIL = "mgl@godtfredlarsen.com"
 
-# ✅ DIN LINJE (direkte kopi fra det program der virker)
+# ✅ samme som dit virkende program
 PASSWORD = os.environ.get("EMAIL_PASSWORD")
 
 tickers = [
@@ -28,9 +28,14 @@ tickers = [
 end_date = datetime.today()
 start_date = end_date - timedelta(weeks=12)
 
-data = yf.download(tickers, start=start_date, end=end_date, threads=False)
+data = yf.download(
+    tickers,
+    start=start_date,
+    end=end_date,
+    threads=False
+)
 
-# Brug Close (stabil løsning)
+# Brug Close (stabil)
 if isinstance(data.columns, pd.MultiIndex):
     data = data["Close"]
 else:
@@ -45,44 +50,52 @@ end_prices = data.iloc[-1]
 returns = ((end_prices / start_prices) - 1) * 100
 returns = returns.dropna()
 
-top5 = returns.sort_values(ascending=False).head(5)
-bottom5 = returns.sort_values(ascending=True).head(5)
-
 # =====================
-# FORMAT
+# FORMAT (ALLE AKTIER + KOLONNER + LINJER)
 # =====================
-def format_table(series):
+def format_table(returns, start_prices, end_prices):
     lines = []
-    header = f"{'Aktie':<15}{'Start':>10}{'Slut':>10}{'Afkast':>10}"
+    
+    header = f"{'Nr':<4}{'Aktie':<15}{'Start':>10}{'Slut':>10}{'Afkast':>10}"
     lines.append(header)
     lines.append("-" * len(header))
-    
-    for ticker, value in series.items():
+
+    sorted_returns = returns.sort_values(ascending=False)
+
+    for i, (ticker, value) in enumerate(sorted_returns.items(), start=1):
         start = start_prices[ticker]
         end = end_prices[ticker]
-        lines.append(f"{ticker:<15}{start:>10.2f}{end:>10.2f}{value:>9.2f}%")
-    
+
+        lines.append(f"{i:<4}{ticker:<15}{start:>10.2f}{end:>10.2f}{value:>9.2f}%")
+
+        # ✅ Linje efter nr. 5
+        if i == 5:
+            lines.append("-" * len(header))
+
+        # ✅ Linje efter nr. 19
+        if i == 19:
+            lines.append("-" * len(header))
+
     return "\n".join(lines)
 
 date_str = end_date.strftime("%d %B %Y")
 
+# =====================
+# EMAIL TEKST
+# =====================
 email_text = f"""Momentum C25 – uge ({date_str})
 
 Hej Michael,
 
-Her er ugens momentum-beregning (12 uger bagud fra fredag):
+Her er ugens momentum-rangering (12 uger):
 
-📈 LONG (5 stærkeste aktier):
-{format_table(top5)}
-
-📉 SHORT (5 svageste aktier):
-{format_table(bottom5)}
+{format_table(returns, start_prices, end_prices)}
 
 Mvh
 """
 
 # =====================
-# SEND EMAIL (IDENTISK MED DIN VIRKENDE KODE)
+# SEND EMAIL (samme som virker hos dig)
 # =====================
 msg = MIMEText(email_text)
 msg['From'] = EMAIL
