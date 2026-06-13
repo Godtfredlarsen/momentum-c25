@@ -102,4 +102,3 @@ if PASSWORD and PASSWORD.strip():
         print("MAIL FEJL:", e)
 else:
     print("PASSWORD PROBLEM")
-```
