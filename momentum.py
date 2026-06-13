@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 EMAIL = "mgl@godtfredlarsen.com"
 TO_EMAIL = "mgl@godtfredlarsen.com"
 
-# ✅ samme som dit virkende program
+# ✅ Samme som dit virkende program
 PASSWORD = os.environ.get("EMAIL_PASSWORD")
 
 tickers = [
@@ -35,7 +35,7 @@ data = yf.download(
     threads=False
 )
 
-# Brug Close (stabil)
+# ✅ Stabil løsning
 if isinstance(data.columns, pd.MultiIndex):
     data = data["Close"]
 else:
@@ -51,53 +51,83 @@ returns = ((end_prices / start_prices) - 1) * 100
 returns = returns.dropna()
 
 # =====================
-# FORMAT (ALLE AKTIER + KOLONNER + LINJER)
+# HTML TABEL (PERFEKTE KOLONNER)
 # =====================
-def format_table(returns, start_prices, end_prices):
-    lines = []
-    
-    header = f"{'Nr':<4}{'Aktie':<15}{'Start':>10}{'Slut':>10}{'Afkast':>10}"
-    lines.append(header)
-    lines.append("-" * len(header))
+def format_html_table(returns, start_prices, end_prices):
 
     sorted_returns = returns.sort_values(ascending=False)
+
+    html = """
+    <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse;">
+        <tr>
+            <th>Nr</th>
+            <th>Aktie</th>
+            <th>Start</th>
+            <th>Slut</th>
+            <th>Afkast</th>
+        </tr>
+    """
 
     for i, (ticker, value) in enumerate(sorted_returns.items(), start=1):
         start = start_prices[ticker]
         end = end_prices[ticker]
 
-        lines.append(f"{i:<4}{ticker:<15}{start:>10.2f}{end:>10.2f}{value:>9.2f}%")
+        html += f"""
+        <tr>
+            <td>{i}</td>
+            <td>{ticker}</td>
+            <td>{start:.2f}</td>
+            <td>{end:.2f}</td>
+            <td>{value:.2f}%</td>
+        </tr>
+        """
 
         # ✅ Linje efter nr. 5
         if i == 5:
-            lines.append("-" * len(header))
+            html += """
+            <tr>
+                <td colspan="5"><hr style="border:2px solid black;"></td>
+            </tr>
+            """
 
         # ✅ Linje efter nr. 19
         if i == 19:
-            lines.append("-" * len(header))
+            html += """
+            <tr>
+                <td colspan="5"><hr style="border:2px solid black;"></td>
+            </tr>
+            """
 
-    return "\n".join(lines)
+    html += "</table>"
+
+    return html
 
 date_str = end_date.strftime("%d %B %Y")
 
 # =====================
-# EMAIL TEKST
+# EMAIL INDHOLD (HTML)
 # =====================
-email_text = f"""Momentum C25 – uge ({date_str})
+email_html = f"""
+<html>
+<body>
 
-Hej Michael,
+Hej Michael,<br><br>
 
-Her er ugens momentum-rangering (12 uger):
+Her er ugens momentum-rangering (12 uger):<br><br>
 
-{format_table(returns, start_prices, end_prices)}
+{format_html_table(returns, start_prices, end_prices)}
 
+<br><br>
 Mvh
+
+</body>
+</html>
 """
 
 # =====================
-# SEND EMAIL (samme som virker hos dig)
+# SEND EMAIL (samme metode som virker)
 # =====================
-msg = MIMEText(email_text)
+msg = MIMEText(email_html, "html")
 msg['From'] = EMAIL
 msg['To'] = TO_EMAIL
 msg['Subject'] = "Momentum C25"
