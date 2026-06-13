@@ -28,7 +28,7 @@ start_date = end_date - timedelta(weeks=12)
 
 data = yf.download(tickers, start=start_date, end=end_date)
 
-# ✅ FIX (brug Close i stedet for Adj Close)
+# ✅ ROBUST DATA HANDLING (Close virker altid)
 if isinstance(data.columns, pd.MultiIndex):
     data = data["Close"]
 elif "Close" in data.columns:
@@ -52,7 +52,7 @@ top5 = returns.sort_values(ascending=False).head(5)
 bottom5 = returns.sort_values(ascending=True).head(5)
 
 # =====================
-# FORMAT
+# FORMAT (KOLONNER)
 # =====================
 def format_table(series):
     lines = []
@@ -85,14 +85,14 @@ Mvh
 """
 
 # =====================
-# SEND EMAIL
+# SEND EMAIL (ONE.COM FIX)
 # =====================
 msg = MIMEText(email_text)
 msg["Subject"] = "Momentum C25"
 msg["From"] = EMAIL
 msg["To"] = TO_EMAIL
 
-with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+with smtplib.SMTP_SSL("send.one.com", 465) as server:
     server.login(EMAIL, EMAIL_PASSWORD)
     server.send_message(msg)
 
