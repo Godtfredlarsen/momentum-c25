@@ -26,8 +26,19 @@ tickers = [
 end_date = datetime.today()
 start_date = end_date - timedelta(weeks=12)
 
-data = yf.download(tickers, start=start_date, end=end_date)["Adj Close"]
+data = yf.download(tickers, start=start_date, end=end_date)
 
+# ✅ FIX FOR "Adj Close" FEJL
+if isinstance(data.columns, pd.MultiIndex):
+    data = data["Adj Close"]
+elif "Adj Close" in data.columns:
+    data = data["Adj Close"]
+else:
+    raise Exception("Adj Close data ikke fundet")
+
+# =====================
+# PRISER
+# =====================
 start_prices = data.iloc[0]
 end_prices = data.iloc[-1]
 
@@ -41,7 +52,7 @@ top5 = returns.sort_values(ascending=False).head(5)
 bottom5 = returns.sort_values(ascending=True).head(5)
 
 # =====================
-# FORMAT
+# FORMAT (KOLONNER)
 # =====================
 def format_table(series):
     lines = []
