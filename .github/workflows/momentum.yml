@@ -2,26 +2,30 @@ name: Momentum C25
 
 on:
   schedule:
-    - cron: '0 16 * * 5'   # fredag kl 18 dansk tid
-  workflow_dispatch:       # manuel test-knap
+    - cron: '0 16 * * 5'   # Fredag kl 18 dansk tid
+  workflow_dispatch:       # Gør at du kan trykke "Run workflow"
 
 jobs:
   run-script:
     runs-on: ubuntu-latest
 
     steps:
+      # ✅ Hent repo
       - name: Checkout kode
         uses: actions/checkout@v3
 
+      # ✅ Installer Python
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
-      - name: Installer pakker
-        run: pip install yfinance pandas
+      # ✅ Installer pakker
+      - name: Install dependencies
+        run: |
+          pip install yfinance pandas
 
-      # ✅ KRITISK FIX (her var din fejl)
+      # ✅ Kør dit script (VIGTIGT: env her!)
       - name: Kør momentum script
         env:
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
