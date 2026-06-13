@@ -26,9 +26,15 @@ tickers = [
 end_date = datetime.today()
 start_date = end_date - timedelta(weeks=12)
 
-data = yf.download(tickers, start=start_date, end=end_date)
+# ✅ FIX: undgå database lock
+data = yf.download(
+    tickers,
+    start=start_date,
+    end=end_date,
+    threads=False
+)
 
-# ✅ ROBUST DATA HANDLING (Close virker altid)
+# ✅ FIX: brug Close (stabilt)
 if isinstance(data.columns, pd.MultiIndex):
     data = data["Close"]
 elif "Close" in data.columns:
@@ -52,7 +58,7 @@ top5 = returns.sort_values(ascending=False).head(5)
 bottom5 = returns.sort_values(ascending=True).head(5)
 
 # =====================
-# FORMAT (KOLONNER)
+# FORMAT
 # =====================
 def format_table(series):
     lines = []
@@ -83,8 +89,9 @@ Her er ugens momentum-beregning (12 uger bagud fra fredag):
 
 Mvh
 """
+
 # =====================
-# SEND EMAIL (FIXED ONE.COM)
+# SEND EMAIL (ENDGYLDIG FIX)
 # =====================
 msg = MIMEText(email_text)
 msg["Subject"] = "Momentum C25"
@@ -92,7 +99,9 @@ msg["From"] = EMAIL
 msg["To"] = TO_EMAIL
 
 with smtplib.SMTP("send.one.com", 587) as server:
-    server.starttls()
+    server.ehlo()          # ✅ vigtigt
+    server.starttls()      # ✅ vigtigt
+    server.ehlo()          # ✅ vigtigt
     server.login(EMAIL, EMAIL_PASSWORD)
     server.send_message(msg)
 
