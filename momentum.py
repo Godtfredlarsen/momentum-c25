@@ -83,16 +83,16 @@ Her er ugens momentum-beregning (12 uger bagud fra fredag):
 
 Mvh
 """
-
 # =====================
-# SEND EMAIL (ONE.COM FIX)
+# SEND EMAIL (FIXED ONE.COM)
 # =====================
 msg = MIMEText(email_text)
 msg["Subject"] = "Momentum C25"
 msg["From"] = EMAIL
 msg["To"] = TO_EMAIL
 
-with smtplib.SMTP_SSL("send.one.com", 465) as server:
+with smtplib.SMTP("send.one.com", 587) as server:
+    server.starttls()
     server.login(EMAIL, EMAIL_PASSWORD)
     server.send_message(msg)
 
