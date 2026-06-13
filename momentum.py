@@ -5,9 +5,6 @@ import os
 from email.mime.text import MIMEText
 from datetime import datetime, timedelta
 
-# =====================
-# KONFIGURATION
-# =====================
 EMAIL = "mgl@godtfredlarsen.com"
 EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD")
 TO_EMAIL = "mgl@godtfredlarsen.com"
@@ -26,25 +23,13 @@ tickers = [
 end_date = datetime.today()
 start_date = end_date - timedelta(weeks=12)
 
-# ✅ FIX: undgå database lock
-data = yf.download(
-    tickers,
-    start=start_date,
-    end=end_date,
-    threads=False
-)
+data = yf.download(tickers, start=start_date, end=end_date, threads=False)
 
-# ✅ FIX: brug Close (stabilt)
 if isinstance(data.columns, pd.MultiIndex):
     data = data["Close"]
-elif "Close" in data.columns:
-    data = data["Close"]
 else:
-    raise Exception("Close data ikke fundet")
+    data = data["Close"]
 
-# =====================
-# PRISER
-# =====================
 start_prices = data.iloc[0]
 end_prices = data.iloc[-1]
 
@@ -91,27 +76,23 @@ Mvh
 """
 
 # =====================
-# SEND EMAIL (FINAL FIX ONE.COM)
+# SEND EMAIL (SAMME METODE SOM VIRKER)
 # =====================
-import smtplib
-from email.mime.text import MIMEText
-
 msg = MIMEText(email_text)
-msg["Subject"] = "Momentum C25"
-msg["From"] = EMAIL
-msg["To"] = TO_EMAIL
+msg['From'] = EMAIL
+msg['To'] = TO_EMAIL
+msg['Subject'] = "Momentum C25"
 
-server = smtplib.SMTP("send.one.com", 587)
-server.set_debuglevel(1)   # valgfrit (kan fjernes senere)
+if EMAIL_PASSWORD and EMAIL_PASSWORD.strip():
+    try:
+        server = smtplib.SMTP("send.one.com", 587)
+        server.starttls()
+        server.login(EMAIL, EMAIL_PASSWORD)
+        server.sendmail(EMAIL, TO_EMAIL, msg.as_string())
+        server.quit()
 
-server.ehlo()
-server.starttls()
-server.ehlo()
-
-# ✅ vigtige ekstra linjer
-server.login(EMAIL, str(EMAIL_PASSWORD).strip())
-
-server.sendmail(EMAIL, TO_EMAIL, msg.as_string())
-server.quit()
-
-print("E-mail sendt ✅")
+        print("MAIL SENDT ✅")
+    except Exception as e:
+        print("MAIL FEJL:", e)
+else:
+    print("PASSWORD PROBLEM")
