@@ -29,4 +29,4 @@ jobs:
       - name: Kør momentum script
         env:
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
-        run: python momentum.py
+        run: python momentum12uger.py
