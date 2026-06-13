@@ -9,13 +9,15 @@ from datetime import datetime, timedelta
 # KONFIGURATION
 # =====================
 EMAIL = "mgl@godtfredlarsen.com"
-EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD")
 TO_EMAIL = "mgl@godtfredlarsen.com"
+
+# ✅ DIN LINJE (direkte kopi fra det program der virker)
+PASSWORD = os.environ.get("EMAIL_PASSWORD")
 
 tickers = [
     "NOVO-B.CO","DSV.CO","DANSKE.CO","MAERSK-B.CO","MAERSK-A.CO",
     "ORSTED.CO","VWS.CO","CARL-B.CO","GMAB.CO","TRYG.CO",
-    "COLO-B.CO","DEMANT.CO","NKT.CO","JYSK.CO","PNDORA.CO",
+    "COLO-B.CO","DEMANT.CO","NKT.CO","PNDORA.CO",
     "ALSYDB.CO","ROCK-B.CO","ISS.CO","FLS.CO","ZEAL.CO",
     "RBREW.CO","AMBU-B.CO","BAVA.CO","GN.CO","NSIS-B.CO"
 ]
@@ -26,14 +28,9 @@ tickers = [
 end_date = datetime.today()
 start_date = end_date - timedelta(weeks=12)
 
-data = yf.download(
-    tickers,
-    start=start_date,
-    end=end_date,
-    threads=False   # undgår database lock
-)
+data = yf.download(tickers, start=start_date, end=end_date, threads=False)
 
-# Brug Close (stabil)
+# Brug Close (stabil løsning)
 if isinstance(data.columns, pd.MultiIndex):
     data = data["Close"]
 else:
@@ -85,18 +82,18 @@ Mvh
 """
 
 # =====================
-# SEND EMAIL (PRÆCIS SOM VIRKER)
+# SEND EMAIL (IDENTISK MED DIN VIRKENDE KODE)
 # =====================
 msg = MIMEText(email_text)
 msg['From'] = EMAIL
 msg['To'] = TO_EMAIL
 msg['Subject'] = "Momentum C25"
 
-if EMAIL_PASSWORD and EMAIL_PASSWORD.strip():
+if PASSWORD and PASSWORD.strip():
     try:
         server = smtplib.SMTP("send.one.com", 587)
         server.starttls()
-        server.login(EMAIL, EMAIL_PASSWORD)
+        server.login(EMAIL, PASSWORD)
         server.sendmail(EMAIL, TO_EMAIL, msg.as_string())
         server.quit()
 
@@ -105,3 +102,4 @@ if EMAIL_PASSWORD and EMAIL_PASSWORD.strip():
         print("MAIL FEJL:", e)
 else:
     print("PASSWORD PROBLEM")
+``
