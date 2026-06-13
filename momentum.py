@@ -91,18 +91,27 @@ Mvh
 """
 
 # =====================
-# SEND EMAIL (ENDGYLDIG FIX)
+# SEND EMAIL (FINAL FIX ONE.COM)
 # =====================
+import smtplib
+from email.mime.text import MIMEText
+
 msg = MIMEText(email_text)
 msg["Subject"] = "Momentum C25"
 msg["From"] = EMAIL
 msg["To"] = TO_EMAIL
 
-with smtplib.SMTP("send.one.com", 587) as server:
-    server.ehlo()          # ✅ vigtigt
-    server.starttls()      # ✅ vigtigt
-    server.ehlo()          # ✅ vigtigt
-    server.login(EMAIL, EMAIL_PASSWORD)
-    server.send_message(msg)
+server = smtplib.SMTP("send.one.com", 587)
+server.set_debuglevel(1)   # valgfrit (kan fjernes senere)
+
+server.ehlo()
+server.starttls()
+server.ehlo()
+
+# ✅ vigtige ekstra linjer
+server.login(EMAIL, str(EMAIL_PASSWORD).strip())
+
+server.sendmail(EMAIL, TO_EMAIL, msg.as_string())
+server.quit()
 
 print("E-mail sendt ✅")
