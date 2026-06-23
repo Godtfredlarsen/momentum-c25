@@ -11,7 +11,6 @@ from datetime import datetime, timedelta
 EMAIL = "mgl@godtfredlarsen.com"
 TO_EMAIL = "mgl@godtfredlarsen.com"
 
-# ✅ Samme som dit virkende program
 PASSWORD = os.environ.get("EMAIL_PASSWORD")
 
 tickers = [
@@ -35,23 +34,25 @@ data = yf.download(
     threads=False
 )
 
-# ✅ Stabil løsning
 if isinstance(data.columns, pd.MultiIndex):
     data = data["Close"]
 else:
     data = data["Close"]
 
-start_prices = data.iloc[0]
-end_prices = data.iloc[-1]
+# ✅ Brug første og sidste gyldige pris (meget vigtigt)
+start_prices = data.ffill().iloc[0]
+end_prices = data.ffill().iloc[-1]
 
 # =====================
 # BEREGNING
 # =====================
 returns = ((end_prices / start_prices) - 1) * 100
-returns = returns.dropna()
+
+# ✅ BEHOLD alle aktier – ingen dropna!
+# (vi håndterer NaN senere i visning)
 
 # =====================
-# HTML TABEL (PERFEKTE KOLONNER)
+# HTML TABEL
 # =====================
 def format_html_table(returns, start_prices, end_prices):
 
@@ -69,29 +70,32 @@ def format_html_table(returns, start_prices, end_prices):
     """
 
     for i, (ticker, value) in enumerate(sorted_returns.items(), start=1):
-        start = start_prices[ticker]
-        end = end_prices[ticker]
+
+        start = start_prices.get(ticker, None)
+        end = end_prices.get(ticker, None)
+
+        # ✅ håndtér manglende data
+        if pd.isna(value) or pd.isna(start) or pd.isna(end):
+            afkast_str = "N/A"
+            start_str = "N/A"
+            end_str = "N/A"
+        else:
+            afkast_str = f"{value:.2f}%"
+            start_str = f"{start:.2f}"
+            end_str = f"{end:.2f}"
 
         html += f"""
         <tr>
             <td>{i}</td>
             <td>{ticker}</td>
-            <td>{start:.2f}</td>
-            <td>{end:.2f}</td>
-            <td>{value:.2f}%</td>
+            <td>{start_str}</td>
+            <td>{end_str}</td>
+            <td>{afkast_str}</td>
         </tr>
         """
 
-        # ✅ Linje efter nr. 5
-        if i == 5:
-            html += """
-            <tr>
-                <td colspan="5"><hr style="border:2px solid black;"></td>
-            </tr>
-            """
-
-        # ✅ Linje efter nr. 19
-        if i == 19:
+        # visuel opdeling (valgfrit)
+        if i == 5 or i == 19:
             html += """
             <tr>
                 <td colspan="5"><hr style="border:2px solid black;"></td>
@@ -102,10 +106,8 @@ def format_html_table(returns, start_prices, end_prices):
 
     return html
 
-date_str = end_date.strftime("%d %B %Y")
-
 # =====================
-# EMAIL INDHOLD (HTML)
+# EMAIL
 # =====================
 email_html = f"""
 <html>
@@ -125,7 +127,7 @@ Mvh
 """
 
 # =====================
-# SEND EMAIL (samme metode som virker)
+# SEND EMAIL
 # =====================
 msg = MIMEText(email_html, "html")
 msg['From'] = EMAIL
